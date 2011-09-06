@@ -4,11 +4,10 @@ var NUMCOLS = 16;
 var canvas;
 var ctx;
 var tileImgs;
-var woolTile; //Special case: transparent wool tile
 var woolColours = [["0, 0, 0", "128, 0, 0", "0, 128, 0", "128, 64, 0", 
-	"0, 0, 128", "128, 0, 128", "0, 128, 200", "128, 128, 128"], 
+	"0, 0, 128", "128, 0, 128", "0, 128, 200", "196, 196, 196"], 
 	["64, 64, 64", "255, 0, 128", "0, 255, 0", "255, 255, 0", 
-	"64, 64, 255", "255, 0, 128", "255, 128, 0"]];
+	"64, 64, 255", "255, 128, 255", "255, 128, 0"]];
 function init(){
 	document.getElementById("go-button").addEventListener("click", function(e){
 		build();
@@ -38,8 +37,6 @@ function loadImages(){
 			tileImgs[r][c].src = "src/" + r + "/" + c + ".bmp";
 		}
 	}
-	woolTile = new Image();
-	woolTile.src = "src/wool.png";
 	function imgLoadHandler(e){
 		trace("Loaded " + e.target.src);
 		loadedCount++;
@@ -82,6 +79,23 @@ function keyoutPink(){
 	ctx.putImageData(imgdata, 0, 0, canvas.width, canvas.height);
 }
 function paintColouredWool() {
+	var woolCanvas = document.createElement("canvas");
+	woolCanvas.height = TILE_WIDTH;
+	woolCanvas.width = TILE_WIDTH;
+	var woolCtx = woolCanvas.getContext("2d");
+	woolCtx.drawImage(tileImgs[4][0], 0, 0);
+	var woolImgdata = woolCtx.getImageData(0, 0, woolCanvas.width, woolCanvas.height);
+	var data = woolImgdata.data;
+	for(var i = 0; i < data.length; i+=4){
+		if(data[i] == 255 && data[i+1] == 255 && data[i+2] == 255){
+			data[i+3] = 0;
+		}
+		else if (data[i] == 192 && data[i+1] == 192 && data[i+2] == 192) {
+			data[i] = data[i+1] = data [i+2] = 255;
+			data[i+3] = 96;
+		}
+	}
+	woolCtx.putImageData(woolImgdata, 0, 0, woolCanvas.width, woolCanvas.height);
 	for(var r = 7; r <= 14; r++) {
 		for (var c = 1; c <= 2; c++) {
 			if (r == 14 && c == 2) { //No wool image here. 
@@ -89,7 +103,7 @@ function paintColouredWool() {
 			}
 			ctx.fillStyle = 'rgba(' + woolColours[c - 1][r - 7] + ", 128)";
 			ctx.fillRect(c * TILE_WIDTH, r * TILE_WIDTH, TILE_WIDTH, TILE_WIDTH);
-			ctx.drawImage(woolTile, c * TILE_WIDTH, r * TILE_WIDTH);
+			ctx.drawImage(woolCanvas, c * TILE_WIDTH, r * TILE_WIDTH);
 		}
 	}
 }
